@@ -1,0 +1,30 @@
+{
+  "id": "",
+  "name": "",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "7546275",
+      "name": "喇叭",
+      "font_class": "laba",
+      "unicode": "e7a8",
+      "unicode_decimal": 59304
+    },
+    {
+      "icon_id": "9451594",
+      "name": "列表",
+      "font_class": "liebiao",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "16322537",
+      "name": "静音",
+      "font_class": "jingyin",
+      "unicode": "e6e5",
+      "unicode_decimal": 59109
+    }
+  ]
+}
