@@ -2,9 +2,16 @@
   <div style="margin-top: 25px;margin-bottom: 45px;padding: 0 1px">
     <div>
       <!--轮播图-->
-      <el-carousel type="card" :interval="5000" :height="bannerHeight+'px'">
+      <el-carousel
+          type="card" :interval="5000"
+          :height="bannerHeight+'px'"
+          element-loading-text="拼命加载图片中,请尝试刷新页面"
+          element-loading-spinner="el-icon-loading"
+          v-loading="bannerInfo.length === 0" >
         <el-carousel-item v-for="(item,index) in bannerInfo" :key="index">
-          <el-image :src="item.imageUrl" fit="contain"></el-image>
+          <el-image
+              :src="item.imageUrl"
+              fit="contain"></el-image>
           <el-tag
               :type="item.typeTitle === '独家' ? 'danger' : 'primary'"
               effect="dark" style="margin: 0;position:relative;transform: translate(-100%,-100%);top: -4px;left: 100%">
@@ -17,7 +24,7 @@
         <el-row style="border-bottom: 2px solid rgb(230,230,230)">
           <p style="margin-bottom: 10px;font-size: 22px;">推荐歌单</p>
         </el-row>
-        <el-row :gutter="10" v-for="(list,index) in musicList" :key="index">
+        <el-row :gutter="10" v-for="(list,index) in showMusicList" :key="index">
           <el-col :span="4" v-for="(item,index) in list" :key="index"
                   style="margin-top: 20px;position:relative;">
             <!--播放量-->
@@ -61,8 +68,10 @@
         <el-row style="margin-top: 25px;">
           <!--左侧-->
           <el-col :span="12">
-            <el-table :data="newMusicList.slice(0,5)" stripe
-                      :show-header="false">
+            <el-table
+                :data="newMusicList.slice(0,5)" stripe
+                @row-dblclick="dblclickPlayMusic"
+                :show-header="false">
               <el-table-column type="index">
                 <template #default="scope">
                   {{'0'+(scope.$index+1).toString()}}
@@ -70,10 +79,14 @@
               </el-table-column>
               <el-table-column>
                 <template #default="scope">
-                  <i class="el-icon-video-play"
+                  <i
+                      @click="changeUrl(scope.row.id)"
+                      class="el-icon-video-play"
                      style="position: absolute;font-size: 25px;top: 35px;left:35px;z-index: 10;cursor:pointer;"></i>
-                  <el-image :src="scope.row.picUrl"
-                            style="width: 75px;height: 75px;cursor:pointer;"></el-image>
+                  <el-image
+                      :src="scope.row.picUrl"
+                      @click="changeUrl(scope.row.id)"
+                      style="width: 75px;height: 75px;cursor:pointer;"></el-image>
                   <span style="position: absolute;top: 25px;font-size: 15px;font-weight: 500;margin-left: 10px">{{scope.row.name}}</span>
                   <span style="cursor:pointer;position: absolute;bottom: 25px;font-size: 12px;font-weight: 500;margin-left: 10px">
                     {{scope.row.song.artists[0].name}}</span>
@@ -84,6 +97,7 @@
           <!--右侧-->
           <el-col :span="12">
             <el-table
+                @row-dblclick="dblclickPlayMusic"
                 :data="newMusicList.slice(5)" stripe
                 :show-header="false">
               <el-table-column type="index">
@@ -92,18 +106,18 @@
                 </template>
               </el-table-column>
               <el-table-column>
-                <template slot-scope="scope">
-                  <el-image :src="scope.row.picUrl" @click="changeUrl(scope.row.id)"
-                            style="width: 75px;height: 75px;cursor:pointer;"></el-image>
-                  <i class="el-icon-video-play" @click="changeUrl(scope.row.id)"
-                     style="position: absolute;font-size: 25px;top: 35px;left:35px;z-index: 10;cursor:pointer;margin-left: 10px"></i>
-                  <span style="position: absolute;top: 25px;font-size: 15px;font-weight: 500">
-                    {{scope.row.name}}
-                  </span>
-                  <span
-                      style="cursor:pointer;position: absolute;bottom: 25px;font-size: 12px;font-weight: 500;margin-left: 10px">
-                    {{scope.row.song.artists[0].name}}
-                  </span>
+                <template #default="scope">
+                  <i
+                      @click="changeUrl(scope.row.id)"
+                      class="el-icon-video-play"
+                     style="position: absolute;font-size: 25px;top: 35px;left:35px;z-index: 10;cursor:pointer;"></i>
+                  <el-image
+                      @click="changeUrl(scope.row.id)"
+                      :src="scope.row.picUrl"
+                      style="width: 75px;height: 75px;cursor:pointer;"></el-image>
+                  <span style="position: absolute;top: 25px;font-size: 15px;font-weight: 500;margin-left: 10px">{{scope.row.name}}</span>
+                  <span style="cursor:pointer;position: absolute;bottom: 25px;font-size: 12px;font-weight: 500;margin-left: 10px">
+                    {{scope.row.song.artists[0].name}}</span>
                 </template>
               </el-table-column>
             </el-table>
@@ -130,9 +144,14 @@ export default {
       //独家放送的信息
       privateList: [],
       //最新音乐的推送列表
-      newMusicList: []
+      newMusicList: [],
+      //需要播放的音乐地址
+      musicUrl: '',
+      //当前音乐的详情对象
+      music: {},
     }
   },
+  props:{},
   created() {
     //获取轮播图数据
     this.getBannerInfo();
@@ -142,6 +161,15 @@ export default {
     this.getPrivateList();
     //获取最新音乐
     this.getNewMusicList();
+  },
+  computed:{
+    showMusicList(){
+      const list = [];
+      for(let i = 1;i<= this.musicList.length/6+1;i++){
+        list.push(this.musicList.slice((i-1)*6,i*6));
+      }
+      return list;
+    }
   },
   methods:{
     // 获取轮播图数据
@@ -155,6 +183,28 @@ export default {
         }
       })
     },
+    // 点击banner轮播图向父组件传递切换对应的音乐,和专辑封面
+    async changeUrl(musicId){
+      if(musicId === null) return;
+      await this.getMusicUrl(musicId);
+      await this.getMusicDetail(musicId);
+      //防止url未获得提交信息到父组件
+      if (this.musicUrl !== '') {
+        this.$emit('setParentMusicUrl', this.musicUrl, this.music)
+      }
+    },
+    //根据id获取音乐url
+    getMusicUrl(musicId){
+      return this.$http.get({url:'song/url', params: {id: musicId}}).then(({data:res}) => {
+        this.musicUrl = res.data[0].url;
+      })
+    },
+    //根据id获取音乐详情
+    getMusicDetail(musicId) {
+      return this.$http.get({url:'song/detail', params: {ids: musicId}}).then(({data:res}) => {
+        this.music = res.songs[0];
+      })
+    },
     // 通过浏览器的宽度来动态计算轮播图的高度 初始高度为屏幕宽度的1/4
     setSize(){
       if(this.screenWidth <940){
@@ -165,32 +215,30 @@ export default {
     //获取歌单数据
     getMusicList(){
       //随机取出精品歌单,避免数据是流动的
-      this.$http.get('/top/playlist', {
+      this.$http.get({url:'/top/playlist',
         params: {
           offset: (Math.random() * 1297).toFixed(0) - 12,
           limit: 12
-        }
-      }).then(res => {
+        }}).then(res => {
         this.musicList = res.data.playlists;
-        const list = [];
-        for(let i = 1;i<= this.musicList.length/6+1;i++){
-          list.push(this.musicList.slice((i-1)*6,i*6));
-        }
-       this.musicList = list;
       })
     },
     //获取独家放送数据
     getPrivateList() {
-      this.$http.get('/personalized/privatecontent').then(res => {
+      this.$http.get({url:'/personalized/privatecontent'}).then(res => {
         this.privateList = res.data.result;
       })
     },
     //推荐最新音乐
     getNewMusicList() {
-      this.$http.get('personalized/newsong').then(res => {
+      this.$http.get({url:'personalized/newsong'}).then(res => {
         this.newMusicList = res.data.result;
       })
     },
+    // 双击播放音乐
+    dblclickPlayMusic(row){
+      this.changeUrl(row.id);
+    }
   },
   mounted() {
     this.screenWidth = window.innerWidth;

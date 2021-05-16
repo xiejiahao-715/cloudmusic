@@ -4,6 +4,9 @@ import VueRouter from 'vue-router'
 const Main = ()=>import('@/views/main/Main')
 const FindMusic = ()=>import('@/views/findMusic/FindMusic')
 const DiyRecommend = ()=>import('@/views/findMusic/diyRecommend/DiyRecommend')
+const MusicListPage = ()=>import('@/views/findMusic/musicList/MusicListPage')
+const MusicRank = ()=>import('@/views/findMusic/musicRank/MusicRank')
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -18,7 +21,11 @@ const routes = [
         component: FindMusic,
         children:[
             // 个性推荐
-          {path: '/diyRecommend',component: DiyRecommend}
+          {path: '/diyRecommend',component: DiyRecommend},
+            // 歌单模块
+          {path: '/musicListPage',component: MusicListPage},
+            // 排行榜模块
+          {path: '/musicRank',component: MusicRank}
         ]
       }
     ]

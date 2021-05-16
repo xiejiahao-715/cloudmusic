@@ -55,7 +55,19 @@
       </el-aside>
       <!--主体区域-->
       <el-main>
-        <router-view></router-view>
+        <!--
+        setMusicUrl:设置当前需要播放的url连接,子路由(DiyRecommend.vue)的banner调用传递url
+        setSongListInfo:设置当前歌单信息,子路由(MusicListTable.vue)的点击事件传递歌单信息
+        musicDuration给子组件传递值  子组件prop接收
+        curId给子组件传值
+        -->
+        <router-view
+            ref="child"
+            @setMusicUrl="setMusicUrl"
+            @setSongListInfo="setSongListInfo"
+            :musicDuration="musicDuration"
+            :isPlay="isPlay" :curId="curId"
+            @refreshPrivatePlaylist="getUserPrivatePlayList"></router-view>
       </el-main>
     </el-container>
     <el-footer height="60px">
@@ -73,29 +85,55 @@
         <el-row>
           <!--一首 暂停 下一首控件-->
           <el-col :span="3" style="font-size: 220%;line-height: 60px">
-            <span class="el-icon-caret-left" style="cursor: pointer;"></span>
-            <span v-if="isPlay" class="el-icon-video-pause" style="cursor: pointer;"></span>
-            <span v-else class="el-icon-video-play" style="cursor: pointer;"></span>
-            <span class="el-icon-caret-right" style="cursor: pointer;"></span>
+            <span
+                @click="changePrevMusic"
+                class="el-icon-caret-left" style="cursor: pointer;"></span>
+            <span
+                v-if="isPlay"
+                @click="playMusic"
+                class="el-icon-video-pause" style="cursor: pointer;"></span>
+            <span
+                v-else
+                @click="playMusic"
+                class="el-icon-video-play" style="cursor: pointer;"></span>
+            <span
+                @click="changeNextMusic"
+                class="el-icon-caret-right" style="cursor: pointer;"></span>
           </el-col>
           <!--播放音乐进度条-->
           <el-col :span="12" style="display: flex">
             <!--秒数通过 过滤器处理成看得懂的样式-->
             <span style="line-height: 60px;">{{this.musicDuration | timeFormat}}</span>
             <!--音乐播放进度条-->
-            <el-slider v-model="musicDuration" :max="totalDuration"
-                       :show-tooltip="false"></el-slider>
+            <el-slider
+                ref="musicSliderRef"
+                v-model="musicDuration"
+                :max="totalDuration"
+                @change="musicDurationChange"
+                :disabled="totalDuration === 0"
+                :format-tooltip="formatMusicSlider"
+                :show-tooltip="true"></el-slider>
             <span style="line-height: 60px;">{{totalDuration | timeFormat}}</span>
           </el-col>
+          <!--调节音量-->
           <el-col :span="8">
             <div style="display: flex">
               <!--音量控制-->
               <div style="margin-top: 18px;margin-left: 5%">
-                <span v-if="musicVolume!==0" class="iconfont icon-laba" style="cursor: pointer;"></span>
-                <span class="iconfont icon-jingyin" v-else style="cursor: pointer;"></span>
+                <span
+                    v-if="musicVolume!==0"
+                    @click="silence"
+                    class="iconfont icon-laba" style="cursor: pointer;"></span>
+                <span
+                    v-else
+                    @click="silence"
+                    class="iconfont icon-jingyin" style="cursor: pointer;"></span>
               </div>
-              <el-slider v-model="musicVolume" :show-tooltip="false"
-                         style="width: 30%;margin-left: 10px;margin-right: 10px"></el-slider>
+              <el-slider
+                  v-model="musicVolume"
+                  @change="musicVolumeChange"
+                  :show-tooltip="true"
+                  style="width: 30%;margin-left: 20px;margin-right: 10px"></el-slider>
               <div style="margin-top: 18px;">
                 <span class="iconfont icon-liebiao" style="cursor: pointer;"></span>
               </div>
@@ -103,6 +141,8 @@
           </el-col>
       </el-row>
       </div>
+
+      <audio :src="musicUrl" id="audio" autoplay></audio>
     </el-footer>
     <!-- 登陆的对话框 -->
     <el-dialog
@@ -160,6 +200,12 @@ export default {
       curId: 0,
       //总进度条
       totalDuration: 0,
+      // 播放列表信息
+      playListInfo: window.localStorage.getItem('playList').length === 0 ? []:window.localStorage.getItem('playList').split(','),
+      //当前播放的歌单的所有歌曲的url和其他信息
+      currentMusicListInfo: [],
+      //当前播放的歌单的id
+      songListInfo: [],
     }
   },
   created() {
@@ -181,6 +227,15 @@ export default {
         return item.subscribed === true;
       })
     }
+  },
+  mounted() {
+    // 初始化播放器
+    let audio = window.document.getElementById('audio');
+    audio.addEventListener('timeupdate',this.formatAudio);
+  },
+  beforeDestroy() {
+    let audio = window.document.getElementById('audio');
+    audio.removeEventListener('timeupdate',this.formatAudio);
   },
   methods:{
     // 点击未登录的文字按钮显示对话框 并且发送请求获取请求生成二维码
@@ -272,8 +327,154 @@ export default {
       }).catch(()=>{
         this.$message.error('获取个人歌单失败');
       })
-    }
+    },
+    // 设置当前播放的url
+    setMusicUrl(musicUrl,detail){
+      //设置关于音乐的链接和歌曲信息
+      this.musicUrl = musicUrl;
+      this.music = detail;
+      this.curId = detail.id;
+      // 更新状态
+      this.isPlay = true;
+    },
+    //控制暂停播放
+    playMusic() {
+      let audio = window.document.getElementById('audio');
+      if (this.musicUrl !== '') {
+        if (!audio.paused) {
+          audio.pause()
+        } else {
+          audio.play()
+        }
+        this.isPlay = !this.isPlay;
+      }
+    },
+    //接受子路由传递过来的歌单信息
+    async setSongListInfo(songList, curId){
+      console.log('设置歌单');
+      this.playListInfo = songList;
+      //将当前歌单信息放入localStorage
+      window.localStorage.setItem('playList', songList);
+      //设置当前歌单点击需要播放的音乐链接
+      const {data:res} = await this.$http.get({url:'song/url', params: {id: curId}});
+      if(res.data[0].url === null){
+        this.$message.info('当前歌曲暂不可用,已为您自动跳过');
+        this.curId = curId;
+        this.changeNextMusic();
+      }else {
+        this.musicUrl = res.data[0].url;
+        //设置当前歌单的详细信息
+        await this.$http.get({url:'song/detail', params: {ids: curId}}).then(({data:res}) => {
+          this.music = res.songs[0];
+        });
+        //设置当前播放音乐的id
+        this.curId = curId
+        // 跟新状态
+        this.isPlay = true;
+      }
+    },
+    //根据id获取音乐详情
+    getMusicDetail(musicId) {
+      return  this.$http.get({url:'song/detail', params: {ids: musicId}}).then(({data:res}) => {
+        this.music = res.songs[0];
+      })
+    },
+    //根据id获取音乐url
+    getMusicUrl(musicId) {
+      return this.$http.get({url:'song/url',params: {id: musicId}}).then(({data:res}) => {
+        this.musicUrl = res.data[0].url;
+      })
+    },
+    // 切换下一首歌
+    changeNextMusic(){
+      if(this.playListInfo.length>0) {
+        // 下一个音乐的下标
+        const nextMusicIndex = this.playListInfo.findIndex(target => {
+          return target === this.curId;
+        }) + 1;
+        // 判断下标是否合法
+        if(nextMusicIndex>=0&&nextMusicIndex<this.playListInfo.length)
+          this.setSongListInfo(this.playListInfo, this.playListInfo[nextMusicIndex]);
+        else{
+          // 下标溢出播放第一首歌
+          this.setSongListInfo(this.playListInfo, this.playListInfo[0]);
+        }
+      }
+      this.$message.error('没有下一首歌曲');
+    },
+    // 切换上一首歌
+    changePrevMusic() {
+      if(this.playListInfo.length>0) {
+        // 下一个音乐的下标
+        const prevMusicIndex = this.playListInfo.findIndex(target => {
+          return target === this.curId;
+        }) - 1;
+        // 判断下标是否合法
+        if(prevMusicIndex>=0&&prevMusicIndex<this.playListInfo.length)
+          this.setSongListInfo(this.playListInfo, this.playListInfo[prevMusicIndex]);
+        else{
+          // 下标溢出播放最后一首歌
+          this.setSongListInfo(this.playListInfo, this.playListInfo[this.playListInfo.length]);
+        }
+      }
+      this.$message.error('没有上一首歌曲');
+    },
+    //表单的双击事件,双击表单播放歌曲
+    playRightMusicList(row) {
+      //右下角点击事件生效  播放该音乐
+      this.setSongListInfo(this.playListInfo, row.id)
+    },
+    //音乐进度条值变化的方法
+    musicDurationChange(){
+      let audio = window.document.getElementById('audio');
+      audio.currentTime = this.musicDuration;
+      audio.play();
+    },
+    //改变音量的函数
+    volumeChange(volum) {
+      let audio = window.document.getElementById('audio');
+      audio.volume = volum;
+    },
+    // 静音和改变图标
+    silence(){
+      if(this.musicVolume !== 0){
+        this.volumeChange(0);
+        this.musicVolume = 0;
+      }else {
+        this.volumeChange(0.2);
+        this.musicVolume = 20;
+      }
+    },
+    // 音量变化
+    musicVolumeChange() {
+      this.volumeChange(this.musicVolume / 100)
+    },
+    // 初始化audio,当进度改变时触发,当timeupdate事件触发时调用
+    formatAudio(){
+      let audio = window.document.getElementById('audio');
+      // 获取歌曲的总长度 单位为秒
+      this.totalDuration = audio.duration;
+      // 获取播放的进度 单位为秒 当音乐进度条被拖拽时不实时触发
+      if(this.$refs.musicSliderRef.dragging === false) {
+        this.musicDuration = audio.currentTime
+      }
+      // 当前歌曲播放完毕自动播放下一首
+      if(audio.currentTime >= audio.duration){
+        this.changeNextMusic();
+      }
+    },
+    // 播放音乐进度条的显示
+    formatMusicSlider(value){
+      return this.$options.filters['timeFormat'](value);
+    },
   },
+  watch:{
+    // 监听组件中的当前音乐id的变化 发生变化则加入歌单 放入localstorage中供给各个组件使用
+    curId(newVal){
+      console.log("播放列表:"+this.playListInfo);
+      console.log("播放的音乐id:"+newVal);
+    }
+  }
 }
 </script>
 
