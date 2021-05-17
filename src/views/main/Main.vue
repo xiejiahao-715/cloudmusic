@@ -54,7 +54,7 @@
         </el-menu>
       </el-aside>
       <!--主体区域-->
-      <el-main>
+      <el-main id="main">
         <!--
         setMusicUrl:设置当前需要播放的url连接,子路由(DiyRecommend.vue)的banner调用传递url
         setSongListInfo:设置当前歌单信息,子路由(MusicListTable.vue)的点击事件传递歌单信息
@@ -74,10 +74,15 @@
       <!--底部播放信息显示-->
       <!--点击左下角角标 跳转歌曲详情界面-->
       <div style="height: 100%;width: 15%;display: flex">
-        <img :src="music.al.picUrl" alt="" style="width: 60px;height: 60px;cursor:pointer;">
+        <img v-if="curId === 0" src="@/assets/img/defaultMusic.png" alt="">
+        <img v-else :src="music.al.picUrl" alt="" style="width: 60px;height: 60px;cursor:pointer;">
         <div style="margin-left: 5%;overflow: hidden">
-          <p style="margin: 5px 0 8px 0;text-align: center;">{{music.name}}</p>
-          <p style="margin: 0;font-size: 10px;color: gray;cursor: pointer;text-align: center;">{{music.ar[0].name}}</p>
+          <p style="height: 50%;margin: 5px 0 -3px 0;text-align: center;text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
+            {{music.name}}
+          </p>
+          <p style="font-size: 15px;color: gray;height: 50%;margin: 0;text-align: center;text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
+            {{music.ar[0].name}}
+          </p>
         </div>
       </div>
       <!--进度条及一些组件-->
@@ -135,7 +140,9 @@
                   :show-tooltip="true"
                   style="width: 30%;margin-left: 20px;margin-right: 10px"></el-slider>
               <div style="margin-top: 18px;">
-                <span class="iconfont icon-liebiao" style="cursor: pointer;"></span>
+                <span
+                    @click="showRightPlayList"
+                    class="iconfont icon-liebiao" style="cursor: pointer;"></span>
               </div>
             </div>
           </el-col>
@@ -153,6 +160,30 @@
       <!-- 验证码图片-->
       <img @click="handleLogin" v-if="QRcodeStatus" :src=qrimg alt="" style="cursor:pointer;">
       <span v-else @click="handleLogin" style="cursor:pointer;">请点击文字重新获取二维码</span>
+    </el-dialog>
+
+    <!--歌单列表的右下角弹窗显示-->
+    <el-dialog
+        title="播放列表"
+        :visible.sync="showRightPlayListDialog"
+        :modal="false" width="30%" center
+        :show-close="false">
+      <el-table
+          ref="playTableRef"
+          highlight-current-row border stripe
+          style="cursor: context-menu;"
+          :data="currentMusicListInfo">
+        <el-table-column label="#" type="index">
+          <template #default="scope">
+            <img v-if="curId === scope.row.id" src="imgs/isPlay.png" alt="">
+            <p v-else>{{scope.$index+1}}</p>
+          </template>
+        </el-table-column>
+        <el-table-column label="音乐标题" prop="name"></el-table-column>
+        <el-table-column label="歌手" prop="ar[0].name"></el-table-column>
+        <el-table-column label="专辑名" prop="al.name"></el-table-column>
+        <el-table-column label="时长" prop="dt" width="80px;"></el-table-column>
+      </el-table>
     </el-dialog>
   </el-container>
 </template>
@@ -201,11 +232,13 @@ export default {
       //总进度条
       totalDuration: 0,
       // 播放列表信息
-      playListInfo: window.localStorage.getItem('playList').length === 0 ? []:window.localStorage.getItem('playList').split(','),
+      playListInfo: window.localStorage.getItem('playList') === null ? []:window.localStorage.getItem('playList').split(','),
       //当前播放的歌单的所有歌曲的url和其他信息
       currentMusicListInfo: [],
       //当前播放的歌单的id
       songListInfo: [],
+      // 展示右边的歌单对话框
+      showRightPlayListDialog: false,
     }
   },
   created() {
@@ -467,12 +500,33 @@ export default {
     formatMusicSlider(value){
       return this.$options.filters['timeFormat'](value);
     },
+    //点击右下角图标展示右侧的歌单信息
+    showRightPlayList(){
+      this.showRightPlayListDialog = true;
+      // 处理歌单所有歌曲信息的查询(根据id)
+      this.$http.get({
+        url: 'song/detail',
+        params:{ids: window.localStorage.getItem('playList')}
+      }).then(({data:res})=>{
+        this.currentMusicListInfo = res.songs;
+        //处理时长数据
+        this.currentMusicListInfo.forEach(item => {
+          const dt = new Date(item.dt)
+          const mm = (dt.getMinutes() + '').padStart(2, '0')
+          const ss = (dt.getSeconds() + '').padStart(2, '0')
+          item.dt = mm + ':' + ss
+        })
+      }).catch(()=>{
+        this.$message.warning('歌单无数据');
+      })
+    }
   },
   watch:{
     // 监听组件中的当前音乐id的变化 发生变化则加入歌单 放入localstorage中供给各个组件使用
     curId(newVal){
-      console.log("播放列表:"+this.playListInfo);
-      console.log("播放的音乐id:"+newVal);
+      // window.localStorage.setItem('curPlayMusicId',newVal);
+      //使用定义好的方法设置新的localstorage中的值 main.js中定义
+      this.resetSetItem('curPlayMusicId', newVal);
     }
   }
 }
