@@ -37,6 +37,7 @@
             <div>
               <el-image
                   :src="item.coverImgUrl"
+                  @click="toSongListPage(item.id)"
                   style="width: 100%;height:100%;box-shadow: 0 0 2px 2px gray;border-radius: 10px;cursor: pointer">
               </el-image>
             </div>
@@ -238,7 +239,11 @@ export default {
     // 双击播放音乐
     dblclickPlayMusic(row){
       this.changeUrl(row.id);
-    }
+    },
+    //点击歌单跳转界面
+    toSongListPage(id) {
+      this.$router.push('/songlist/' + id)
+    },
   },
   mounted() {
     this.screenWidth = window.innerWidth;

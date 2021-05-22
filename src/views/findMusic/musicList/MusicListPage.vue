@@ -23,10 +23,11 @@
           <div>
             <el-image
                 :src="item.coverImgUrl"
+                @click="toSongListPage(item.id)"
                 style="box-shadow: 0 0 2px 2px gray;border-radius: 10px;cursor: pointer">
             </el-image>
           </div>
-          <h1 style="cursor:pointer;">{{item.name}}</h1>
+          <h1 @click="toSongListPage(item.id)" style="cursor:pointer;">{{item.name}}</h1>
         </el-col>
       </el-row>
       <!--分页-->
@@ -103,6 +104,10 @@ export default {
         this.queryInfo.cat = newCat;
       }
       this.getGoodMusicList();
+    },
+    // 点击歌单跳转页面
+    toSongListPage(id){
+      this.$router.push('/songlist/'+id);
     }
   },
 }

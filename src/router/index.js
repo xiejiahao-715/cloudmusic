@@ -8,6 +8,9 @@ const MusicListPage = ()=>import('@/views/findMusic/musicList/MusicListPage')
 const MusicRank = ()=>import('@/views/findMusic/musicRank/MusicRank')
 const SingerList = ()=>import('@/views/findMusic/singer/SingerList')
 const NewMusicList = ()=>import('@/views/findMusic/newMusic/NewMusicList')
+const SongList = ()=>import('@/views/findMusic/diyRecommend/SongList')
+const MusicListTable = ()=>import('@/views/findMusic/diyRecommend/MusicListTable')
+const CommentPage = ()=>import('@/views/findMusic/diyRecommend/CommentPage')
 
 Vue.use(VueRouter)
 
@@ -19,7 +22,6 @@ const routes = [
     children:[
       {
         path: 'findMusic',
-        redirect:'/diyRecommend',
         component: FindMusic,
         children:[
             // 个性推荐
@@ -32,6 +34,16 @@ const routes = [
           {path: '/singerList',component: SingerList},
             // 最新音乐模块
           {path: '/newMusicList',component: NewMusicList}
+        ]
+      },
+      // 点击跳转到歌单页面
+      {
+        path: '/songList/:id',
+        component: SongList,
+        // 歌单页面中的子组件(歌曲列表,评论,收藏)
+        children: [
+          {path: '/musicPage',component:MusicListTable,name:'musicPage'},
+          {path: '/comment/:id',component:CommentPage}
         ]
       }
     ]

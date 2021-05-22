@@ -175,7 +175,7 @@
           :data="currentMusicListInfo">
         <el-table-column label="#" type="index">
           <template #default="scope">
-            <img v-if="curId === scope.row.id" src="imgs/isPlay.png" alt="">
+            <img v-if="curId == scope.row.id" src="@/assets/img/isPlay.png" alt="">
             <p v-else>{{scope.$index+1}}</p>
           </template>
         </el-table-column>
@@ -245,6 +245,37 @@ export default {
     if(this.currentUserInfo !== null){
       // 用户已登陆，获取歌单
       this.getUserPrivatePlayList();
+    }
+    // 定义临时变量 curId，加载上一次播放的音乐
+    const curId = window.localStorage.getItem('curPlayMusicId');
+    if(curId !== null){
+      this.$http.get({url:'song/detail', params: {ids: curId}}).then(({data:res}) => {
+        if(res.code === 200) {
+          const music = res.songs[0];
+          this.$http.get({url: 'song/url', params: {id: curId}}).then(({data: res}) => {
+            if(res.code === 200){
+              let timer = setInterval(()=>{
+                console.log('正在恢复上一次播放的音乐');
+                let audio = window.document.getElementById('audio');
+                if(audio.readyState === 4){
+                  audio.pause();
+                  this.music = music;
+                  this.curId = curId;
+                  clearInterval(timer);
+                  timer = null;
+                }
+              },100);
+              setTimeout(()=>{
+                if(timer !== null){
+                  this.musicUrl = '';
+                  clearInterval(timer);
+                }
+              },1000);
+              this.musicUrl = res.data[0].url;
+            }
+          })
+        }
+      })
     }
   },
   computed:{
@@ -381,10 +412,14 @@ export default {
         }
         this.isPlay = !this.isPlay;
       }
+      else{
+        // 如果播放音乐链接为空则跳转下一首
+        this.changeNextMusic();
+        this.isPlay = !this.isPlay;
+      }
     },
     //接受子路由传递过来的歌单信息
     async setSongListInfo(songList, curId){
-      console.log('设置歌单');
       this.playListInfo = songList;
       //将当前歌单信息放入localStorage
       window.localStorage.setItem('playList', songList);
@@ -401,10 +436,11 @@ export default {
           this.music = res.songs[0];
         });
         //设置当前播放音乐的id
-        this.curId = curId
+        this.curId = curId;
         // 跟新状态
         this.isPlay = true;
       }
+      return 'finish';
     },
     //根据id获取音乐详情
     getMusicDetail(musicId) {
@@ -433,12 +469,12 @@ export default {
           this.setSongListInfo(this.playListInfo, this.playListInfo[0]);
         }
       }
-      this.$message.error('没有下一首歌曲');
+      else this.$message.error('没有下一首歌曲');
     },
     // 切换上一首歌
     changePrevMusic() {
       if(this.playListInfo.length>0) {
-        // 下一个音乐的下标
+        // 上一个音乐的下标
         const prevMusicIndex = this.playListInfo.findIndex(target => {
           return target === this.curId;
         }) - 1;
@@ -447,10 +483,10 @@ export default {
           this.setSongListInfo(this.playListInfo, this.playListInfo[prevMusicIndex]);
         else{
           // 下标溢出播放最后一首歌
-          this.setSongListInfo(this.playListInfo, this.playListInfo[this.playListInfo.length]);
+          this.setSongListInfo(this.playListInfo, this.playListInfo[this.playListInfo.length-1]);
         }
       }
-      this.$message.error('没有上一首歌曲');
+      else this.$message.error('没有上一首歌曲');
     },
     //表单的双击事件,双击表单播放歌曲
     playRightMusicList(row) {

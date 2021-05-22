@@ -34,6 +34,33 @@ Vue.filter('timeFormat',function (time) {
   return `${minutes}:${seconds}`;
 })
 
+//全局vue过滤器(时间戳过滤器成2020-08-23)
+Vue.filter('dateFormatToYMD',function (originVal) {
+  const dt = new Date(originVal)
+
+  const y = dt.getFullYear()
+  const m = (dt.getMonth()+ 1 +'').padStart(2,'0')
+  const d = (dt.getDay() + '').padStart(2,'0')
+
+
+  return `${y}-${m}-${d}`
+})
+
+//全局vue过滤器(时间戳过滤器)
+Vue.filter('dateFormat',function (originVal) {
+  const dt = new Date(originVal)
+
+  const y = dt.getFullYear()
+  const m = (dt.getMonth()+ 1 +'').padStart(2,'0')
+  const d = (dt.getDay() + '').padStart(2,'0')
+
+  const hh = (dt.getHours() + '').padStart(2,'0')
+  const mm = (dt.getMinutes() + '').padStart(2,'0')
+  const ss = (dt.getSeconds() + '').padStart(2,'0')
+
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`
+})
+
 //监听localstorage中的 curPlayMusicId
 Vue.prototype.resetSetItem = function (key, newVal) {
   if (key === 'curPlayMusicId') {

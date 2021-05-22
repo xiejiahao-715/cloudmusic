@@ -2,7 +2,7 @@
   <div style="overflow-x: hidden">
     <div style="border-bottom: 1px solid rgb(230,230,230);height: 60px">
       <el-menu
-          :default-active=activePath
+          :default-active="activePath"
           :router="true"
           mode="horizontal"
           style="margin: 0 auto;width: 420px;">
@@ -15,7 +15,6 @@
     </div>
     <keep-alive>
       <router-view
-          ref="child"
           @setParentMusicUrl="setParentMusicUrl"
           @setSongListInfo="setSongListInfo"></router-view>
     </keep-alive>
@@ -33,6 +32,7 @@ export default {
   watch:{
     $route(to){
       window.sessionStorage.setItem('findMusic_activePath',to.fullPath);
+      this.activePath = to.fullPath;
     }
   },
   methods:{
@@ -44,7 +44,7 @@ export default {
     setSongListInfo(playlist,musicId){
       this.$emit('setSongListInfo', playlist, musicId)
     }
-  }
+  },
 }
 </script>
 
