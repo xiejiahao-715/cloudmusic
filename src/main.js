@@ -37,12 +37,9 @@ Vue.filter('timeFormat',function (time) {
 //全局vue过滤器(时间戳过滤器成2020-08-23)
 Vue.filter('dateFormatToYMD',function (originVal) {
   const dt = new Date(originVal)
-
   const y = dt.getFullYear()
   const m = (dt.getMonth()+ 1 +'').padStart(2,'0')
-  const d = (dt.getDay() + '').padStart(2,'0')
-
-
+  const d = (dt.getDate() + '').padStart(2,'0')
   return `${y}-${m}-${d}`
 })
 
@@ -52,7 +49,7 @@ Vue.filter('dateFormat',function (originVal) {
 
   const y = dt.getFullYear()
   const m = (dt.getMonth()+ 1 +'').padStart(2,'0')
-  const d = (dt.getDay() + '').padStart(2,'0')
+  const d = (dt.getDate() + '').padStart(2,'0')
 
   const hh = (dt.getHours() + '').padStart(2,'0')
   const mm = (dt.getMinutes() + '').padStart(2,'0')
@@ -70,7 +67,7 @@ Vue.prototype.resetSetItem = function (key, newVal) {
       setItem: function (k, val) {
         localStorage.setItem(k, val);
         // 初始化创建的事件
-        newStorageEvent.initStorageEvent('setItem', false, false, k, null, val, null, null);
+        newStorageEvent.initStorageEvent('setCurPlayMusicId', false, false, k, null, val, null, null);
         // 派发对象
         window.dispatchEvent(newStorageEvent)
       }
@@ -83,7 +80,7 @@ Vue.prototype.resetSetItem = function (key, newVal) {
       setItem: function (k, val) {
         localStorage.setItem(k, val);
         // 初始化创建的事件
-        newStorageEvent.initStorageEvent('setItem', false, false, k, null, val, null, null);
+        newStorageEvent.initStorageEvent('setCurrentId', false, false, k, null, val, null, null);
         // 派发对象
         window.dispatchEvent(newStorageEvent)
       }

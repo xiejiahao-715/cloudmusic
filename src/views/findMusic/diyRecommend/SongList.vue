@@ -4,6 +4,7 @@
     <div style="position: relative;display: flex;">
       <!--歌单图标-->
       <el-image
+          v-if="currentSongList.coverImgUrl"
           ref="imageRef"
           :src="currentSongList.coverImgUrl" alt=""
           style="width: 220px;height: 220px;flex: 0 0 220px"></el-image>
@@ -92,22 +93,20 @@ export default {
   },
   created() {
     this.getSongListInfo();
+    //把上一个页面传递来的参数放入localstorage 防止页面刷新 参数没了
+    this.resetSetItem('currentId', this.currentId);
     //注册监听的事件 在main.js中定义了
-    window.addEventListener('setItem', this.listenerSetItem);
+    window.addEventListener('setCurrentId', this.listenerSetCurrentId);
   },
   beforeDestroy() {
-    window.removeEventListener('setItem',this.listenerSetItem);
+    window.removeEventListener('setCurrentId',this.listenerSetCurrentId);
     window.sessionStorage.removeItem('SongList_active');
-  },
-  mounted() {
-    //把上一个页面传递来的参数放入localstorage 防止页面刷新 参数没了
-    window.localStorage.setItem('currentId', this.currentId);
   },
   methods:{
     //获取歌单信息并处理歌单所有歌曲数据
     getSongListInfo(){
       this.$http.get({
-        url: 'playlist/detail',
+        url: '/playlist/detail',
         params:{id: this.currentId}
       }).then(({data:res})=>{
         this.currentSongList = res.playlist;
@@ -148,11 +147,11 @@ export default {
       this.$emit('setSongListInfo', songList, curId);
     },
     // 监听在main.js中定义的setItem事件
-    listenerSetItem(){
+    listenerSetCurrentId(){
       //这里是为了从主页进入的歌单 页面不进行变化 所以加一个localstorage监听器 监听当前歌单变化
       //如果有变化直接就重新查询数据 替换掉之前的数据  实现刷新页面
       this.currentId = parseInt(localStorage.getItem('currentId'))
-      //重新加载数据(暂有BUG未修)
+      //重新加载数据
       this.getSongListInfo();
     },
   }

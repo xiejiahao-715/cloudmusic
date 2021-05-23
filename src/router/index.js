@@ -11,6 +11,11 @@ const NewMusicList = ()=>import('@/views/findMusic/newMusic/NewMusicList')
 const SongList = ()=>import('@/views/findMusic/diyRecommend/SongList')
 const MusicListTable = ()=>import('@/views/findMusic/diyRecommend/MusicListTable')
 const CommentPage = ()=>import('@/views/findMusic/diyRecommend/CommentPage')
+const VideoPage = ()=>import('@/views/findMusic/diyRecommend/VideoPage')
+const SingerDetail = ()=>import('@/views/findMusic/singer/SingerDetail')
+const SingerAlbum = ()=>import('@/views/findMusic/singer/SingerAlbum')
+const SingerMv = ()=>import('@/views/findMusic/singer/SingerMv')
+const SingerDesc = ()=>import('@/views/findMusic/singer/SingerDesc');
 
 Vue.use(VueRouter)
 
@@ -44,6 +49,23 @@ const routes = [
         children: [
           {path: '/musicPage',component:MusicListTable,name:'musicPage'},
           {path: '/comment/:id',component:CommentPage}
+        ]
+      },
+      //跳转mv视频模块
+      {
+        path: '/toVideoPage/:id', component: VideoPage
+      },
+      // 歌手详情页面
+      {
+        path: '/singer/:id',
+        component: SingerDetail,
+        children: [
+          //歌手专辑页
+          {path: '/album/:id', component: SingerAlbum},
+          //歌手推荐MV页面
+          {path: '/singerMv/:id', component: SingerMv},
+          //歌手详细页面
+          {path: '/singerDesc/:id', component: SingerDesc}
         ]
       }
     ]

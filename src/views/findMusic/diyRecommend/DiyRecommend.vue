@@ -10,6 +10,7 @@
           v-loading="bannerInfo.length === 0" >
         <el-carousel-item v-for="(item,index) in bannerInfo" :key="index">
           <el-image
+              @click="changeUrl(item.targetId)"
               :src="item.imageUrl"
               fit="contain"></el-image>
           <el-tag
@@ -57,8 +58,9 @@
                style="color: rgba(255,255,255,0.4);font-size: 45px;position: absolute;top: 10px;z-index: 10"></i>
             <el-image
                 :src="item.sPicUrl"
+                @click="toVideoPage(item.id)"
                 style="box-shadow: 0 0 2px 2px gray;border-radius: 5px;cursor:pointer;"></el-image>
-            <h1 style="cursor: pointer">{{item.name}}</h1>
+            <h1 @click="toVideoPage(item.id)" style="cursor: pointer">{{item.name}}</h1>
           </el-col>
         </el-row>
 
@@ -190,20 +192,32 @@ export default {
       await this.getMusicUrl(musicId);
       await this.getMusicDetail(musicId);
       //防止url未获得提交信息到父组件
-      if (this.musicUrl !== '') {
-        this.$emit('setParentMusicUrl', this.musicUrl, this.music)
+      if (this.musicUrl.length>0 && this.music !== {}) {
+        this.$emit('setParentMusicUrl', this.musicUrl, this.music);
+      }else{
+        this.$message.error('该链接无法播放音乐');
       }
     },
     //根据id获取音乐url
     getMusicUrl(musicId){
-      return this.$http.get({url:'song/url', params: {id: musicId}}).then(({data:res}) => {
-        this.musicUrl = res.data[0].url;
+      return this.$http.get({url:'/song/url', params: {id: musicId}}).then(({data:res}) => {
+        if(res.code === 200 && res.data[0].code === 200) {
+          this.musicUrl = res.data[0].url;
+        }
+        else{
+          this.musicUrl = '';
+        }
       })
     },
     //根据id获取音乐详情
     getMusicDetail(musicId) {
-      return this.$http.get({url:'song/detail', params: {ids: musicId}}).then(({data:res}) => {
-        this.music = res.songs[0];
+      return this.$http.get({url:'/song/detail', params: {ids: musicId}}).then(({data:res}) => {
+        if(res.code === 200 && res.songs.length>0) {
+          this.music = res.songs[0];
+        }
+        else{
+          this.music = {};
+        }
       })
     },
     // 通过浏览器的宽度来动态计算轮播图的高度 初始高度为屏幕宽度的1/4
@@ -232,7 +246,7 @@ export default {
     },
     //推荐最新音乐
     getNewMusicList() {
-      this.$http.get({url:'personalized/newsong'}).then(res => {
+      this.$http.get({url:'/personalized/newsong'}).then(res => {
         this.newMusicList = res.data.result;
       })
     },
@@ -244,6 +258,9 @@ export default {
     toSongListPage(id) {
       this.$router.push('/songlist/' + id)
     },
+    toVideoPage(mvId){
+      this.$router.push('/toVideoPage/'+ mvId)
+    }
   },
   mounted() {
     this.screenWidth = window.innerWidth;

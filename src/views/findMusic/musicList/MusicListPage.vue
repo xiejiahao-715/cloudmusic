@@ -67,7 +67,7 @@ export default {
   methods:{
     // 获取热门歌单标签信息
     getHotMusicListTags(){
-      this.$http.get({url:'playlist/hot'})
+      this.$http.get({url:'/playlist/hot'})
       .then(({data:res})=>{
         this.hotMusicListTags = res.tags;
       })

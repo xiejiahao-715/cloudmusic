@@ -12,6 +12,7 @@
           :span="6">
         <el-image
             :src="item.coverImgUrl" fit="fitHeight"
+            @click="toSongListPage(item.id)"
             style="height: 200px;border-radius: 15px;cursor:pointer;"></el-image>
         <el-table
             :data="item.tracks"
@@ -64,9 +65,11 @@
           </div>
         </div>
         <div>
-          <el-image :src="item.coverImgUrl" style="box-shadow: 0 0 2px 2px gray;border-radius: 10px;cursor: pointer"></el-image>
+          <el-image
+              @click="toSongListPage(item.id)"
+              :src="item.coverImgUrl" style="box-shadow: 0 0 2px 2px gray;border-radius: 10px;cursor: pointer"></el-image>
         </div>
-        <h1 style="cursor:pointer;">{{item.name}}</h1>
+        <h1 @click="toSongListPage(item.id)" style="cursor:pointer;">{{item.name}}</h1>
       </el-col>
     </el-row>
   </div>
@@ -99,11 +102,17 @@ export default {
   methods:{
     //获得官方榜单的数据
     getOfficialRankList(){
-      this.$http.get({url:'toplist/detail'})
+      this.$http.get({url:'/toplist/detail'})
       .then(({data:res})=>{
         this.officialRankList = res.list;
         this.singerRankInfo = res.artistToplist;
+        console.log(this.officialRankList);
+        console.log(this.singerRankInfo);
       })
+    },
+    // 点击歌单跳转界面
+    toSongListPage(id) {
+      this.$router.push('/songlist/' + id)
     },
   },
 }

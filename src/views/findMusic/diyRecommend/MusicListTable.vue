@@ -48,16 +48,16 @@ export default {
   },
   created() {
     this.handlerSongList();
-    window.addEventListener('setItem',this.listenerSetItem);
+    window.addEventListener('setCurPlayMusicId',this.listenerSetCurPlayMusicId);
   },
   beforeDestroy() {
-    window.addEventListener('setItem',this.listenerSetItem);
+    window.removeEventListener('setCurPlayMusicId',this.listenerSetCurPlayMusicId);
   },
   methods:{
     //处理歌单所有歌曲信息的查询(根据id)
     handlerSongList(){
       this.$http.get({
-        url: 'song/detail',
+        url: '/song/detail',
         params:{ids: this.queryIds}
       }).then(({data:res})=>{
         if(res.code === 200){
@@ -84,7 +84,7 @@ export default {
       })
     },
     // 监听main.js的自定义事件
-    listenerSetItem(){
+    listenerSetCurPlayMusicId(){
       this.curId = parseInt(localStorage.getItem('curPlayMusicId'));
     },
     //双击歌曲添加数据进去,并循环播放(向父组件传递参数)

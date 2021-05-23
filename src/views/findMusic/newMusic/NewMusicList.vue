@@ -74,7 +74,7 @@ export default {
     // 获取最新音乐数据
     getNewMusic(){
       return this.$http.get({
-        url: 'top/song',
+        url: '/top/song',
         params:this.queryInfo
       }).then(({data:res})=>{
         this.number += 10;
@@ -85,7 +85,6 @@ export default {
     },
     // 判断滚动条滚到底部  节流 间隔为1s
     handleScroll: throttle(function (){
-      console.log("滚动条监听正在进行");
       // 判断是否是本页面
       if(this.$route.fullPath === '/newMusicList') {
         // 获取主体区域的dom对象

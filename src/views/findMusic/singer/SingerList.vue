@@ -28,13 +28,14 @@
           <div>
             <el-image
                 :src="item.img1v1Url"
+                @click="toSingerDetailPage(item.id)"
                 style="box-shadow: 0 0 2px 2px gray;border-radius: 10px;cursor: pointer">
               <template #placeholder>
                 <div>加载中</div>
               </template>
             </el-image>
           </div>
-          <h1  style="cursor:pointer;">{{item.name}}</h1>
+          <h1 @click="toSingerDetailPage(item.id)" style="cursor:pointer;">{{item.name}}</h1>
         </el-col>
       </el-row>
       <!--分页-->
@@ -129,6 +130,10 @@ export default {
       }
       this.currentPage = 1;
     },
+    //跳转歌手详情页
+    toSingerDetailPage(id) {
+      this.$router.push('/singer/'+id);
+    }
   },
   watch:{
     // 使用water监听分页的改变

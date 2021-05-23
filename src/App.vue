@@ -11,7 +11,7 @@ export default{
         this.$router.push(window.sessionStorage.getItem('findMusic_activePath') === null ? '/diyRecommend' : window.sessionStorage.getItem('findMusic_activePath'));
       }
     }
-  }
+  },
 }
 </script>
 

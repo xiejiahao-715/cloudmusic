@@ -65,6 +65,7 @@
             ref="child"
             @setMusicUrl="setMusicUrl"
             @setSongListInfo="setSongListInfo"
+            @videoPlay="videoPlay"
             :musicDuration="musicDuration"
             :isPlay="isPlay" :curId="curId"
             @refreshPrivatePlaylist="getUserPrivatePlayList"></router-view>
@@ -74,7 +75,7 @@
       <!--底部播放信息显示-->
       <!--点击左下角角标 跳转歌曲详情界面-->
       <div style="height: 100%;width: 15%;display: flex">
-        <img v-if="curId === 0" src="@/assets/img/defaultMusic.png" alt="">
+        <img v-if="curId == 0" src="@/assets/img/defaultMusic.png" alt="">
         <img v-else :src="music.al.picUrl" alt="" style="width: 60px;height: 60px;cursor:pointer;">
         <div style="margin-left: 5%;overflow: hidden">
           <p style="height: 50%;margin: 5px 0 -3px 0;text-align: center;text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
@@ -170,6 +171,7 @@
         :show-close="false">
       <el-table
           ref="playTableRef"
+          @row-dblclick="playRightMusicList"
           highlight-current-row border stripe
           style="cursor: context-menu;"
           :data="currentMusicListInfo">
@@ -239,6 +241,8 @@ export default {
       songListInfo: [],
       // 展示右边的歌单对话框
       showRightPlayListDialog: false,
+      // 历史播放的音乐列表
+      historyPlayList: window.localStorage.getItem('historyPlayList') === null ? []:window.localStorage.getItem('historyPlayList').split(','),
     }
   },
   created() {
@@ -249,13 +253,12 @@ export default {
     // 定义临时变量 curId，加载上一次播放的音乐
     const curId = window.localStorage.getItem('curPlayMusicId');
     if(curId !== null){
-      this.$http.get({url:'song/detail', params: {ids: curId}}).then(({data:res}) => {
+      this.$http.get({url:'/song/detail', params: {ids: curId}}).then(({data:res}) => {
         if(res.code === 200) {
           const music = res.songs[0];
-          this.$http.get({url: 'song/url', params: {id: curId}}).then(({data: res}) => {
+          this.$http.get({url: '/song/url', params: {id: curId}}).then(({data: res}) => {
             if(res.code === 200){
               let timer = setInterval(()=>{
-                console.log('正在恢复上一次播放的音乐');
                 let audio = window.document.getElementById('audio');
                 if(audio.readyState === 4){
                   audio.pause();
@@ -264,7 +267,7 @@ export default {
                   clearInterval(timer);
                   timer = null;
                 }
-              },100);
+              },1);
               setTimeout(()=>{
                 if(timer !== null){
                   this.musicUrl = '';
@@ -380,7 +383,7 @@ export default {
     // 获取用户的私人歌单
     getUserPrivatePlayList(){
       this.$http.get({
-        url: 'user/playlist',
+        url: '/user/playlist',
         params:{uid: this.currentUserInfo.userId}
       }).then(({data:res})=>{
         if(res.code === 200){
@@ -424,7 +427,7 @@ export default {
       //将当前歌单信息放入localStorage
       window.localStorage.setItem('playList', songList);
       //设置当前歌单点击需要播放的音乐链接
-      const {data:res} = await this.$http.get({url:'song/url', params: {id: curId}});
+      const {data:res} = await this.$http.get({url:'/song/url', params: {id: curId}});
       if(res.data[0].url === null){
         this.$message.info('当前歌曲暂不可用,已为您自动跳过');
         this.curId = curId;
@@ -432,7 +435,7 @@ export default {
       }else {
         this.musicUrl = res.data[0].url;
         //设置当前歌单的详细信息
-        await this.$http.get({url:'song/detail', params: {ids: curId}}).then(({data:res}) => {
+        await this.$http.get({url:'/song/detail', params: {ids: curId}}).then(({data:res}) => {
           this.music = res.songs[0];
         });
         //设置当前播放音乐的id
@@ -440,17 +443,16 @@ export default {
         // 跟新状态
         this.isPlay = true;
       }
-      return 'finish';
     },
     //根据id获取音乐详情
     getMusicDetail(musicId) {
-      return  this.$http.get({url:'song/detail', params: {ids: musicId}}).then(({data:res}) => {
+      return  this.$http.get({url:'/song/detail', params: {ids: musicId}}).then(({data:res}) => {
         this.music = res.songs[0];
       })
     },
     //根据id获取音乐url
     getMusicUrl(musicId) {
-      return this.$http.get({url:'song/url',params: {id: musicId}}).then(({data:res}) => {
+      return this.$http.get({url:'/song/url',params: {id: musicId}}).then(({data:res}) => {
         this.musicUrl = res.data[0].url;
       })
     },
@@ -459,7 +461,7 @@ export default {
       if(this.playListInfo.length>0) {
         // 下一个音乐的下标
         const nextMusicIndex = this.playListInfo.findIndex(target => {
-          return target === this.curId;
+          return target == this.curId;
         }) + 1;
         // 判断下标是否合法
         if(nextMusicIndex>=0&&nextMusicIndex<this.playListInfo.length)
@@ -476,7 +478,7 @@ export default {
       if(this.playListInfo.length>0) {
         // 上一个音乐的下标
         const prevMusicIndex = this.playListInfo.findIndex(target => {
-          return target === this.curId;
+          return target == this.curId;
         }) - 1;
         // 判断下标是否合法
         if(prevMusicIndex>=0&&prevMusicIndex<this.playListInfo.length)
@@ -541,7 +543,7 @@ export default {
       this.showRightPlayListDialog = true;
       // 处理歌单所有歌曲信息的查询(根据id)
       this.$http.get({
-        url: 'song/detail',
+        url: '/song/detail',
         params:{ids: window.localStorage.getItem('playList')}
       }).then(({data:res})=>{
         this.currentMusicListInfo = res.songs;
@@ -555,7 +557,14 @@ export default {
       }).catch(()=>{
         this.$message.warning('歌单无数据');
       })
+    },
+    // 监听mv播放的事件 ，暂停歌曲的播放
+    videoPlay(){
+      if(this.isPlay){
+        this.playMusic();
+      }
     }
+
   },
   watch:{
     // 监听组件中的当前音乐id的变化 发生变化则加入歌单 放入localstorage中供给各个组件使用
@@ -563,6 +572,12 @@ export default {
       // window.localStorage.setItem('curPlayMusicId',newVal);
       //使用定义好的方法设置新的localstorage中的值 main.js中定义
       this.resetSetItem('curPlayMusicId', newVal);
+      if(this.historyPlayList.indexOf(newVal)=== -1){
+        this.historyPlayList.unshift(newVal);
+        if(this.historyPlayList.length>5)
+          this.historyPlayList.pop();
+        window.localStorage.setItem('historyPlayList',this.historyPlayList.join(','));
+      }
     }
   }
 }
