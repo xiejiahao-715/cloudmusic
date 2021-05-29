@@ -71,7 +71,15 @@
         </el-table>
       </el-col>
     </el-row>
+    <el-row v-if="hotAlbum.length === 0">
+      <el-table :border="false" style="border: 1px solid red;margin: 10px 0;"></el-table>
+    </el-row>
     <!--分页-->
+    <el-pagination
+        background layout="prev,next,jumper"
+        @current-change="handleCurrentChange"
+        :page-size="queryInfo.limit">
+    </el-pagination>
   </div>
 </template>
 
@@ -198,6 +206,17 @@ export default {
       });
       this.$emit('setSongListInfo', playList, row.id)
     },
+    // 分页插件页数改变
+    handleCurrentChange(newPage){
+      this.queryInfo.offset = (newPage - 1) * this.queryInfo.limit;
+      this.hotAlbum = [];
+      this.albumMusicInfo = [];
+      this.$nextTick(()=>{
+        let main = window.document.getElementById('main');
+        main.scrollTop = 0;
+      });
+      this.getHotAlbum();
+    }
   }
 }
 </script>

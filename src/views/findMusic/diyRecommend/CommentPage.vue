@@ -10,7 +10,7 @@
     </div>
     <!--评论区域-->
     <div style="margin-bottom: 35px;">
-      <h4 style="font-weight: 300;color: red" v-if="queryInfo.offset === 0">精彩评论</h4>
+      <h4 style="font-weight: 300;color: red" v-if="queryInfo.offset === 0 && hotCommentList.length>0">精彩评论</h4>
       <!--精彩评论的信息-->
       <div
           v-for="(item,i) in hotCommentList" :key="'hotCommentList'+i"
@@ -109,7 +109,11 @@ export default {
     },
     // 分页插件页数改变
     handleCurrentChange(newPage){
-      this.queryInfo.offset = (newPage - 1) * this.queryInfo.limit
+      this.queryInfo.offset = (newPage - 1) * this.queryInfo.limit;
+      this.$nextTick(()=>{
+        let main = window.document.getElementById('main');
+        main.scrollTop = 0;
+      })
       this.getCommentList();
     }
   }

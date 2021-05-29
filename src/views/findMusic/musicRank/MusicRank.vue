@@ -106,8 +106,6 @@ export default {
       .then(({data:res})=>{
         this.officialRankList = res.list;
         this.singerRankInfo = res.artistToplist;
-        console.log(this.officialRankList);
-        console.log(this.singerRankInfo);
       })
     },
     // 点击歌单跳转界面

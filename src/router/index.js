@@ -16,6 +16,12 @@ const SingerDetail = ()=>import('@/views/findMusic/singer/SingerDetail')
 const SingerAlbum = ()=>import('@/views/findMusic/singer/SingerAlbum')
 const SingerMv = ()=>import('@/views/findMusic/singer/SingerMv')
 const SingerDesc = ()=>import('@/views/findMusic/singer/SingerDesc');
+const PlayMusicDetailPage = ()=>import('@/views/findMusic/PlayMusicPage/PlayMusicDetailPage')
+const SearchPage = ()=>import('@/views/Search/SearchPage')
+const SearchBySong = ()=>import('@/views/Search/SearchBySong')
+const SearchBySinger = ()=>import('@/views/Search/SearchBySinger')
+const SearchByVideo = ()=>import('@/views/Search/SearchByVideo')
+const SearchByPlayList = ()=>import('@/views/Search/SearchByPlayList')
 
 Vue.use(VueRouter)
 
@@ -66,6 +72,34 @@ const routes = [
           {path: '/singerMv/:id', component: SingerMv},
           //歌手详细页面
           {path: '/singerDesc/:id', component: SingerDesc}
+        ]
+      },
+      // 播放的详情页面 歌词等等
+      {
+        path: 'musicDetail/:id',
+        component: PlayMusicDetailPage
+      },
+      // 搜索结果页
+      {
+        path: '/search/:data',
+        component: SearchPage,
+        children: [
+          {
+            path: '/searchBySong/:data',
+            component: SearchBySong
+          },
+          {
+            path: '/searchBySinger/:data',
+            component: SearchBySinger
+          },
+          {
+            path: '/searchByVideo/:data',
+            component: SearchByVideo
+          },
+          {
+            path: '/searchByPlayList/:data',
+            component: SearchByPlayList
+          }
         ]
       }
     ]

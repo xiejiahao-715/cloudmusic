@@ -5,8 +5,12 @@
       <img src="@/assets/img/logo.png" alt="网易云音乐" class="logo">
       <span>网易云音乐</span>
       <!--头部搜索区域-->
-      <el-input v-model="searchData" placeholder="搜索单曲,歌手,视频,歌单" suffix-icon="el-icon-search" size="mini">
-        <el-button #suffix class="searchBtn" size="mini"></el-button>
+      <el-input
+          v-model="searchData"
+          @keyup.enter.native="toSearchPage"
+          :placeholder="defaultSearchData" size="mini">
+        <i slot="suffix" class="el-input__icon el-icon-search" @click="toSearchPage"
+           style="cursor: pointer;"></i>
       </el-input>
       <!--右侧登录区域-->
       <div class="rightContainer" style="display: flex">
@@ -54,7 +58,7 @@
         </el-menu>
       </el-aside>
       <!--主体区域-->
-      <el-main id="main">
+      <el-main id="main" style="overflow-x: hidden">
         <!--
         setMusicUrl:设置当前需要播放的url连接,子路由(DiyRecommend.vue)的banner调用传递url
         setSongListInfo:设置当前歌单信息,子路由(MusicListTable.vue)的点击事件传递歌单信息
@@ -76,7 +80,7 @@
       <!--点击左下角角标 跳转歌曲详情界面-->
       <div style="height: 100%;width: 15%;display: flex">
         <img v-if="curId == 0" src="@/assets/img/defaultMusic.png" alt="">
-        <img v-else :src="music.al.picUrl" alt="" style="width: 60px;height: 60px;cursor:pointer;">
+        <img v-else :src="music.al.picUrl" alt="" @click="toMusicDetailPage" style="width: 60px;height: 60px;cursor:pointer;">
         <div style="margin-left: 5%;overflow: hidden">
           <p style="height: 50%;margin: 5px 0 -3px 0;text-align: center;text-overflow: ellipsis;white-space: nowrap;overflow: hidden;">
             {{music.name}}
@@ -195,8 +199,6 @@ export default {
   name: "Main",
   data(){
     return {
-      // 顶部搜索框的搜索信息
-      searchData:'',
       // 当前用户的信息
       currentUserInfo: window.localStorage.getItem('currentUserInfo') === 'null' ? null: JSON.parse(window.localStorage.getItem('currentUserInfo')),
       // 控制登陆对话框的显示与隐藏
@@ -243,9 +245,15 @@ export default {
       showRightPlayListDialog: false,
       // 历史播放的音乐列表
       historyPlayList: window.localStorage.getItem('historyPlayList') === null ? []:window.localStorage.getItem('historyPlayList').split(','),
+      // 顶部搜索框的搜索信息
+      searchData:'',
+      // 默认搜索的关键字
+      defaultSearchData: ''
     }
   },
   created() {
+    // 获取搜索的默认关键字
+    this.getDefaultSearchData();
     if(this.currentUserInfo !== null){
       // 用户已登陆，获取歌单
       this.getUserPrivatePlayList();
@@ -409,16 +417,16 @@ export default {
       let audio = window.document.getElementById('audio');
       if (this.musicUrl !== '') {
         if (!audio.paused) {
-          audio.pause()
+          audio.pause();
+          this.isPlay = false;
         } else {
-          audio.play()
+          audio.play();
+          this.isPlay = true;
         }
-        this.isPlay = !this.isPlay;
       }
       else{
         // 如果播放音乐链接为空则跳转下一首
         this.changeNextMusic();
-        this.isPlay = !this.isPlay;
       }
     },
     //接受子路由传递过来的歌单信息
@@ -471,7 +479,10 @@ export default {
           this.setSongListInfo(this.playListInfo, this.playListInfo[0]);
         }
       }
-      else this.$message.error('没有下一首歌曲');
+      else {
+        this.$message.error('没有下一首歌曲');
+        this.isPlay = false;
+      }
     },
     // 切换上一首歌
     changePrevMusic() {
@@ -499,7 +510,6 @@ export default {
     musicDurationChange(){
       let audio = window.document.getElementById('audio');
       audio.currentTime = this.musicDuration;
-      audio.play();
     },
     //改变音量的函数
     volumeChange(volum) {
@@ -527,11 +537,14 @@ export default {
       this.totalDuration = audio.duration;
       // 获取播放的进度 单位为秒 当音乐进度条被拖拽时不实时触发
       if(this.$refs.musicSliderRef.dragging === false) {
-        this.musicDuration = audio.currentTime
+        this.musicDuration = audio.currentTime;
       }
       // 当前歌曲播放完毕自动播放下一首
       if(audio.currentTime >= audio.duration){
-        this.changeNextMusic();
+        // this.changeNextMusic();
+        // 单曲循环
+        this.musicDuration = 0;
+        audio.play();
       }
     },
     // 播放音乐进度条的显示
@@ -563,8 +576,35 @@ export default {
       if(this.isPlay){
         this.playMusic();
       }
+    },
+    //跳转音乐播放详情界面
+    toMusicDetailPage() {
+      if(this.$route.fullPath !== '/musicDetail/' + this.curId) {
+        this.$router.push('/musicDetail/' + this.curId);
+      }
+    },
+    // 跳转到搜索页面
+    toSearchPage(){
+      if(this.searchData.trim() !== ''){//搜索条件不为空
+        if(decodeURIComponent(this.$route.params.data) !== this.searchData) {
+          //encodeURIComponent参数转换 应对中文参数
+          this.$router.replace('/search/' + encodeURIComponent(this.searchData));
+          //调用子类的方法 实现搜索响应式
+          if (this.$refs.child.toSingSearchPage !== undefined) {
+            this.$refs.child.toSingSearchPage(0);
+          }
+        }
+      }
+    },
+    // 获取默认搜索的关键字
+    getDefaultSearchData(){
+      this.$http.get({url: '/search/default'})
+      .then(({data:res})=>{
+        if(res.code === 200){
+          this.defaultSearchData = res.data.showKeyword;
+        }
+      })
     }
-
   },
   watch:{
     // 监听组件中的当前音乐id的变化 发生变化则加入歌单 放入localstorage中供给各个组件使用
@@ -579,7 +619,7 @@ export default {
         window.localStorage.setItem('historyPlayList',this.historyPlayList.join(','));
       }
     }
-  }
+  },
 }
 </script>
 
