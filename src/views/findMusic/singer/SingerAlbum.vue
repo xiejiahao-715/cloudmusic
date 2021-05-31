@@ -38,10 +38,12 @@
             type="danger" size="mini">收起</el-button>
       </el-col>
     </el-row>
+    <!--用于锚点定位-->
+    <div id="album" style="color: red;font-size: 20px;height: 70px;line-height: 70px;">所有专辑</div>
     <!--所有专辑信息-->
     <el-row
         v-for="(item,index) in albumMusicInfo" :key="index"
-        style="border-top: solid 1px #e6e6e6;padding-bottom: 10px;margin-top: 20px;padding-top: 5px">
+        style="border-top: solid 1px #e6e6e6;padding-bottom: 10px;padding-top: 5px">
       <el-col :span="4">
         <div style="display: inline-block;">
           <el-image :src="item.album.picUrl" fit="contain"></el-image>
@@ -147,14 +149,15 @@ export default {
       })
     },
     // 获取歌手热门专辑
+    // 处理才处理得到的数据时，不要使用data里面的数据来进行操作，可以创建临时变量，处理完毕后直接赋值给data里面的数据，避免冗余的渲染操作
     getHotAlbum(){
       this.$http.get({
         url: '/artist/album',
         params: this.queryInfo
       }).then(({data:res})=>{
         if(res.code === 200){
-          this.hotAlbum = res.hotAlbums;
-          this.hotAlbum.forEach(item => {
+          let albumMusicInfo = [];
+          res.hotAlbums.forEach(item => {
             this.$http.get( {
               url: '/album',
               params: {id: item.id}
@@ -166,16 +169,18 @@ export default {
                 const ss = (dt.getSeconds() + '').padStart(2, '0')
                 item.dt = mm + ':' + ss
               })
-              this.albumMusicInfo.push(res.data)
+              albumMusicInfo.push(res.data);
             })
           })
           //处理时长数据
-          this.hotAlbum.forEach(item => {
+          res.hotAlbums.forEach(item => {
             const dt = new Date(item.dt)
             const mm = (dt.getMinutes() + '').padStart(2, '0')
             const ss = (dt.getSeconds() + '').padStart(2, '0')
             item.dt = mm + ':' + ss
           })
+          this.hotAlbum = res.hotAlbums;
+          this.albumMusicInfo = albumMusicInfo;
         }
       })
     },
@@ -209,13 +214,12 @@ export default {
     // 分页插件页数改变
     handleCurrentChange(newPage){
       this.queryInfo.offset = (newPage - 1) * this.queryInfo.limit;
-      this.hotAlbum = [];
-      this.albumMusicInfo = [];
-      this.$nextTick(()=>{
-        let main = window.document.getElementById('main');
-        main.scrollTop = 0;
-      });
       this.getHotAlbum();
+      this.$nextTick(()=>{
+        window.document.getElementById('album').scrollIntoView({
+          block: 'start'
+        })
+      });
     }
   }
 }

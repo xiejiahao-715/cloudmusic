@@ -56,7 +56,10 @@ export default {
     this.getSingerInfo();
     // 第一次进入本组件
     if(window.sessionStorage.getItem('singerDetail_activePath') === null){
-      this.$router.push(this.fullActivePath);
+      // 避免重复跳转
+      if(this.$route.fullPath !== this.fullActivePath) {
+        this.$router.push(this.fullActivePath);
+      }
     }
   },
   beforeDestroy() {

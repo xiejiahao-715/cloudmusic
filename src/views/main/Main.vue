@@ -19,7 +19,7 @@
         <span v-if="currentUserInfo === null" @click="handleLogin" style="cursor:pointer;">未登录</span>
         <span v-else>{{currentUserInfo.nickname}}</span>
         <el-button
-            @click="logout" disabled
+            @click="logout"
             v-if="currentUserInfo !== null"
             type="danger" size="mini"
             style="height: 50%;margin-top: 12px;margin-left: 5px;">退出</el-button>
@@ -28,7 +28,7 @@
     <el-container style="position: relative;" class="contentContainer">
       <!--侧边栏区域-->
       <el-aside width="200px">
-        <el-menu default-active="/findMusic" :router="true">
+        <el-menu :default-active="sideBarActivePath" :router="true" @select="selectMenuItem">
           <el-menu-item-group>
             <template #title>推荐</template>
             <el-menu-item index="/findMusic">发现音乐</el-menu-item>
@@ -42,7 +42,7 @@
             <template #title>创建的歌单</template>
             <template #default>
               <el-menu-item
-                  v-for="item in createdPlayList" :key="item.id"
+                  v-for="item in createdPlayList" :key="item.id" @click="toMyPlayList(item.id)"
                   :index="'/songlist/'+item.id">{{item.name}}</el-menu-item>
             </template>
           </el-menu-item-group>
@@ -50,7 +50,7 @@
             <template #title>收藏的歌单</template>
             <template #default>
               <el-menu-item
-                  v-for="item in favoritePlayList" :key="item.id"
+                  v-for="item in favoritePlayList" :key="item.id" @click="toMyPlayList(item.id)"
                   :index="'/songlist/'+item.id">{{item.name}}
               </el-menu-item>
             </template>
@@ -248,7 +248,9 @@ export default {
       // 顶部搜索框的搜索信息
       searchData:'',
       // 默认搜索的关键字
-      defaultSearchData: ''
+      defaultSearchData: '',
+      // 侧边栏默认路径
+      sideBarActivePath: window.sessionStorage.getItem('sideBarActivePath') === null ? '/findMusic' : window.sessionStorage.getItem('sideBarActivePath'),
     }
   },
   created() {
@@ -586,9 +588,9 @@ export default {
     // 跳转到搜索页面
     toSearchPage(){
       if(this.searchData.trim() !== ''){//搜索条件不为空
-        if(decodeURIComponent(this.$route.params.data) !== this.searchData) {
+        if(decodeURIComponent(this.$route.params.data).trim() !== this.searchData.trim()) {
           //encodeURIComponent参数转换 应对中文参数
-          this.$router.replace('/search/' + encodeURIComponent(this.searchData));
+          this.$router.replace('/search/' + encodeURIComponent(this.searchData.trim()));
           //调用子类的方法 实现搜索响应式
           if (this.$refs.child.toSingSearchPage !== undefined) {
             this.$refs.child.toSingSearchPage(0);
@@ -604,6 +606,17 @@ export default {
           this.defaultSearchData = res.data.showKeyword;
         }
       })
+    },
+    // 点击侧边栏菜单的回调函数
+    selectMenuItem(index){
+      if(index !== this.sideBarActivePath){
+        this.sideBarActivePath = index;
+        window.sessionStorage.setItem('sideBarActivePath',index);
+      }
+    },
+    // 跳转到自己的歌单
+    toMyPlayList(id){
+      this.resetSetItem('currentId',id);
     }
   },
   watch:{

@@ -8,6 +8,8 @@
           style="display: inline-block;width: 98%;margin: 15px 15px;"></el-input>
       <el-button size="mini" style="float:right;margin-right: 14px;">评论</el-button>
     </div>
+    <!--用于定位的盒子-->
+    <div id="comment" style="height: 20px"></div>
     <!--评论区域-->
     <div style="margin-bottom: 35px;">
       <h4 style="font-weight: 300;color: red" v-if="queryInfo.offset === 0 && hotCommentList.length>0">精彩评论</h4>
@@ -33,7 +35,7 @@
           <p style="display:block;font-size: 13px;color: gray;opacity: 0.7">{{item.time | dateFormat}}</p>
         </div>
       </div>
-      <h4 style="font-weight: 300;margin-top: 25px;">最新评论({{total}})</h4>
+      <h4 style="font-weight: 300;margin-top: 35px;">最新评论({{total}})</h4>
       <!--所有评论的信息-->
       <div
           v-for="(item,i) in commentList" :key="'commentList'+i"
@@ -111,8 +113,11 @@ export default {
     handleCurrentChange(newPage){
       this.queryInfo.offset = (newPage - 1) * this.queryInfo.limit;
       this.$nextTick(()=>{
-        let main = window.document.getElementById('main');
-        main.scrollTop = 0;
+        window.document.getElementById('comment').scrollIntoView({
+          block: 'start',
+          // 平滑滚动
+          // behavior: 'smooth'
+        })
       })
       this.getCommentList();
     }

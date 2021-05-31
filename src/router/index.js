@@ -22,6 +22,11 @@ const SearchBySong = ()=>import('@/views/Search/SearchBySong')
 const SearchBySinger = ()=>import('@/views/Search/SearchBySinger')
 const SearchByVideo = ()=>import('@/views/Search/SearchByVideo')
 const SearchByPlayList = ()=>import('@/views/Search/SearchByPlayList')
+const Video = ()=>import('@/views/Video/Video')
+const VideoListTable = ()=>import('@/views/Video/VideoListTable')
+const MvListTable = ()=>import('@/views/Video/MvListTable')
+const VideoPlayPage = ()=>import('@/views/Video/VideoPlayPage')
+const CloudMusic = ()=>import('@/views/Cloud/CloudMusic')
 
 Vue.use(VueRouter)
 
@@ -65,6 +70,7 @@ const routes = [
       {
         path: '/singer/:id',
         component: SingerDetail,
+        redirect: '/album/:id',
         children: [
           //歌手专辑页
           {path: '/album/:id', component: SingerAlbum},
@@ -101,7 +107,33 @@ const routes = [
             component: SearchByPlayList
           }
         ]
-      }
+      },
+      // 视频模块
+      {
+        path: '/video',
+        component: Video,
+        redirect: '/videoPage',
+        children: [
+          {
+            path: '/videoPage',
+            component: VideoListTable,
+          },
+          {
+            path: '/mvPage',
+            component: MvListTable
+          }
+        ]
+      },
+      // 视频播放页
+      {
+        path:'/videoPlay/:id',
+        component: VideoPlayPage
+      },
+      //音乐云盘
+      {
+        path: '/cloudMusic',
+        component: CloudMusic
+      },
     ]
   }
 ]

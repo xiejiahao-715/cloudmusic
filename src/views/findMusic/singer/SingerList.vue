@@ -136,7 +136,7 @@ export default {
     }
   },
   watch:{
-    // 使用water监听分页的改变
+    // 使用watch监听分页的改变
     async currentPage(newValue,oldValue){
       this.queryInfo.offset = (newValue - 1) * this.queryInfo.limit;
       await this.getSingerList();

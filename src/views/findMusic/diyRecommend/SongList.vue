@@ -154,6 +154,7 @@ export default {
       //重新加载数据
       this.getSongListInfo();
     },
+
   }
 }
 </script>

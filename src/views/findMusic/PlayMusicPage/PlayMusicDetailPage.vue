@@ -138,8 +138,6 @@ export default {
   },
   props: ['musicDuration', 'isPlay'],
   created() {
-    let main = window.document.getElementById('main');
-    main.scrollTop = 0;
     //获取音乐的详细信息
     this.getMusicDetail(this.$route.params.id);
     //获取歌曲的歌词

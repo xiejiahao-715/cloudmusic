@@ -7,7 +7,8 @@
           :span="12" :offset="6"
           style="display: flex;align-items: center"
           :style="index % 2 === 0 ? 'background: rgb(245,245,247)' : ''">
-        <el-image :src="item.picUrl" style="width: 100px;height: 100px;cursor: pointer;" @click="toSingerPage(item.id)"></el-image>
+        <el-image v-if="item.picUrl !== null" :src="item.picUrl" style="width: 100px;height: 100px;cursor: pointer;" @click="toSingerPage(item.id)"></el-image>
+        <el-image v-else :src="item.img1v1Url" style="width: 100px;height: 100px;cursor: pointer;" @click="toSingerPage(item.id)"></el-image>
         <div style="margin-left: 20px">{{item.name}}</div>
       </el-col>
     </el-row>

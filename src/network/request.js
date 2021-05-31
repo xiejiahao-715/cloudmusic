@@ -7,10 +7,14 @@ function get(config){
     method: 'get'
   });
   instance.interceptors.request.use(config=>{
+    // 为请求体添加时间戳
     config.params = {
       ...config.params,
       timestamp: Date.parse(new Date())
     }
+    // if(window.localStorage.getItem('musicCookie') !== null){
+    //   config.params.cookie = encodeURIComponent(window.localStorage.getItem('musicCookie'));
+    // }
     return config;
   });
   return instance(config);

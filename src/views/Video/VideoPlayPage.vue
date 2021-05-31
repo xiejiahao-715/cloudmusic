@@ -1,16 +1,16 @@
 <template>
   <el-row style="margin-bottom: 75px;">
-    <!-- 左侧区域 播放mv和显示评论 -->
+    <!-- 左侧区域 播放Video和显示评论 -->
     <el-col :span="14" :offset="1">
       <!--头部信息区域-->
       <el-row>
-        <el-tag size="mini" type="danger" style="background-color: white;border: 1px solid red">MV</el-tag>
-        <span style="margin-left: 10px;">{{mvDetailInfo.data.name}}</span>
-        <span style="margin-left: 10px;font-size: 5px;">{{mvDetailInfo.data.artistName}}</span>
+        <el-tag size="mini" type="danger" style="background-color: white;border: 1px solid red">视频</el-tag>
+        <span style="margin-left: 10px;">{{videoDetailInfo.data.title}}</span>
+        <span style="margin-left: 10px;font-size: 5px;">{{videoDetailInfo.data.creator.nickname}}</span>
       </el-row>
       <!--视频播放区域-->
       <el-row style="margin-top: 5px">
-        <video :src="mvUrl" width="100%" controls="controls" @play="videoPlay">
+        <video :src="videoUrl" width="100%" controls="controls" @play="videoPlay">
           很抱歉,您的浏览器当前不支持最新播放标签!
         </video>
       </el-row>
@@ -27,9 +27,9 @@
         <!--用于定位的盒子 , 盒子必须有大小-->
         <div id="comment" style="height: 20px"></div>
         <!--精彩评论-->
-        <h4 style="font-weight: 300;color: red;" v-if="queryInfo.offset === 0 && mvHotComment.length!==0">精彩评论</h4>
+        <h4 style="font-weight: 300;color: red;" v-if="queryInfo.offset === 0 && videoHotComment.length!==0">精彩评论</h4>
         <div
-            v-for="(item,index) in mvHotComment" :key="'mvHotComment'+index"
+            v-for="(item,index) in videoHotComment" :key="'videoHotComment'+index"
             style="position: relative;border-top: 2px solid rgb(240,240,242);
             border-bottom: 1px solid rgb(240,240,242);padding: 15px 0;font-size: 15px;">
           <div>
@@ -57,7 +57,7 @@
         <!--所有评论-->
         <h4 style="font-weight: 300;margin-top: 25px;">最新评论({{commentTotal}})</h4>
         <div
-            v-for="(item,index) in mvCommentList" :key="'mvComment'+index"
+            v-for="(item,index) in videoCommentList" :key="'videoComment'+index"
             style="position: relative;border-top: 2px solid rgb(240,240,242);
             border-bottom: 1px solid rgb(240,240,242);padding: 15px 0;font-size: 15px;margin-bottom: 20px">
           <div>
@@ -91,45 +91,45 @@
         </el-pagination>
       </el-row>
     </el-col>
-    <!--右侧mv的详细信息-->
+    <!--右侧Video的详细信息-->
     <el-col :span="7" :offset="1">
       <el-row style="border-bottom: 1px solid rgb(230,230,230);padding-bottom: 10px;">
-        <span style="margin-left: 10px;font-size: 20px;font-weight: 400">MV介绍</span>
+        <span style="margin-left: 10px;font-size: 20px;font-weight: 400">视频介绍</span>
       </el-row>
       <!--播放信息-->
       <el-row style="margin-top: 10px;margin-left: 12px;">
         <span style="font-size: 14px;">发布时间:
-          <span style="font-size: 14px;">{{mvDetailInfo.data.publishTime}}</span>
+          <span style="font-size: 14px;">{{videoDetailInfo.data.publishTime | dateFormat}}</span>
         </span>
         <span style="font-size: 14px;margin-left: 15px;float: right">
-          播放次数:<span style="font-size: 14px;">{{(mvDetailInfo.data.playCount/10000).toFixed(0)+'万次'}}</span>
+          播放次数:<span style="font-size: 14px;">{{(videoDetailInfo.data.playTime/10000).toFixed(0)+'万次'}}</span>
         </span>
       </el-row>
       <!--简介-->
       <el-row style="margin-top: 10px;margin-left: 12px;">
-        <p style="font-size: 14px;font-weight: 400;">简介: {{mvDetailInfo.data.desc}}</p>
+        <p style="font-size: 14px;font-weight: 400;">简介: {{videoDetailInfo.data.description}}</p>
       </el-row>
       <!--相关推荐-->
       <el-row style="margin-top: 45px;border-bottom: 1px solid rgb(230,230,230);padding-bottom: 10px;">
         <span style="margin-left: 10px;font-size: 20px;font-weight: 400">相关推荐</span>
       </el-row>
       <!--可点击的视频推荐区域-->
-      <el-row v-for="(item,index) in simiMvList" :key="index" style="margin-top: 25px;">
+      <el-row v-for="(item,index) in simiVideoList" :key="index" style="margin-top: 25px;">
         <el-col :span="13" style="position: relative">
-          <el-image :src="item.cover" @click="toMvPage(item.id)" style="cursor: pointer;" fit="contain"></el-image>
+          <el-image :src="item.coverUrl" @click="toVideoPage(item.vid)" style="cursor: pointer;" fit="contain"></el-image>
           <!--播放量-->
           <div style="color: white;position:absolute;z-index: 10;top: 2px;right: 3px">
             <div style="float:right;">
               <i class="el-icon-headset"></i>
-              {{(item.playCount/10000).toFixed(0)}}万
+              {{(item.playTime/10000).toFixed(0)}}万
             </div>
           </div>
         </el-col>
         <el-col :span="10" :offset="1">
-          <el-tag size="mini" type="danger" style="background-color: white;border: 1px solid red">MV</el-tag>
-          <span style="margin-left: 5px;cursor: pointer" @click="toMvPage(item.id)">{{item.name}}</span>
-          <p style="font-size: 15px;opacity: 0.7;">{{item.duration/1000 | timeFormat}}</p>
-          <p style="font-size: 15px;opacity: 0.7;">{{item.artistName}}</p>
+          <el-tag size="mini" type="danger" style="background-color: white;border: 1px solid red">视频</el-tag>
+          <span style="margin-left: 5px;cursor: pointer" @click="toVideoPage(item.vid)">{{item.title}}</span>
+          <p style="font-size: 15px;opacity: 0.7;">{{item.durationms/1000 | timeFormat}}</p>
+<!--          <p style="font-size: 15px;opacity: 0.7;">{{item.artistName}}</p>-->
         </el-col>
       </el-row>
     </el-col>
@@ -138,82 +138,107 @@
 
 <script>
 export default {
-  name: "VideoPage",
+  name: "VideoPlayPage",
   data(){
     return {
-      //当前mv的id
-      curMvId: this.$route.params.id,
-      //当前mv的详细数据
-      mvDetailInfo: {
-        data: {
-          name: ''
+      // 当前id
+      curVideoId: this.$route.params.id,
+      // 当前详细数据
+      videoDetailInfo:{
+        data:{
+          title: '',
+          creator:{
+            nickname: ''
+          }
         }
       },
-      //当前mv的url
-      mvUrl: '',
-      //查询当前评论数据的查询条件
-      queryInfo: {
+      // 当前Video的url
+      videoUrl: '',
+      // 查询当前评论数据的查询条件
+      queryInfo:{
         id: this.$route.params.id,
-        limit: 10,
         offset: 0,
+        limit: 10
       },
-      //当前mv的评论数据
-      mvCommentList: [],
-      //当前mv评论数量
+      // 当前Video的评论数据
+      videoCommentList: [],
+      // 当前Video评论数量
       commentTotal: 0,
-      //当前mv的精彩评论
-      mvHotComment: [],
-      //与当前mv相关的mv
-      simiMvList: [],
-      // 分页插件的当前页码
-      currentPage: 1
+      // 当前Video的精彩评论
+      videoHotComment: [],
+      // 与当前Video相关的Video
+      simiVideoList: [
+        {
+          title: ''
+        }
+      ],
+      // 分页插件当前的页数
+      currentPage: 1,
     }
   },
   created() {
-    //获取当前mv的详细数据
-    this.getMvDetailInfo();
-    // 获取当前mv的Url
-    this.getMvUrl();
-    // 获取当前mv的评论数据
-    this.getMvCommentList();
-    //获取相关mv
-    this.getSimiMvs();
+    // 获取当前详细数据
+    this.getVideoDetailInfo();
+    //获取当前的url
+    this.getVideoUrl();
+    //获取当前Video的评论数据
+    this.getCommentList();
+    //获取相关Video
+    this.getSimiVideos();
   },
   methods:{
-    //获取当前mv的详细数据
-    getMvDetailInfo(){
+    getVideoDetailInfo(){
       this.$http.get({
-        url: '/mv/detail',
-        params: {mvid: this.curMvId}
-      }).then(({data:res})=>{
-        if(res.code === 200) {
-          this.mvDetailInfo = res;
+        url: '/video/detail',
+        params: {id: this.curVideoId}
+      }).then(res=>{
+        if(res.data.code === 200){
+          this.videoDetailInfo = res.data;
         }
       })
     },
-    // 获取当前mv的url
-    getMvUrl(){
+    // 获取当前视频的url
+    getVideoUrl(){
       this.$http.get({
-        url: '/mv/url',
-        params: {id: this.curMvId}
-      }).then(({data:res})=>{
-        if(res.code === 200){
-          this.mvUrl = res.data.url;
+        url: '/video/url',
+        params:{id:this.curVideoId}
+      }).then(res=>{
+        if(res.data.code === 200) {
+          this.videoUrl = res.data.urls[0].url;
         }
       })
     },
-    // 获取当前mv的评论数据
-    getMvCommentList(){
+    // 获取当前Video的评论数据
+    getCommentList() {
       this.$http.get({
-        url: '/comment/mv',
+        url: '/comment/video',
         params: this.queryInfo
-      }).then(({data:res})=>{
-        if(res.code === 200) {
-          this.mvHotComment = res.hotComments === undefined ? [] : res.hotComments;
-          this.mvCommentList = res.comments;
-          this.commentTotal = res.total;
+      }).then(res=>{
+        if(res.data.code === 200){
+          this.videoCommentList = res.data.comments;
+          this.videoHotComment = res.data.hotComments === undefined ? [] : res.data.hotComments;
+          this.commentTotal = res.data.total;
         }
       })
+    },
+    // 获取相关Video
+    getSimiVideos(){
+      this.$http.get({
+        url: '/related/allvideo',
+        params: {id: this.curVideoId}
+      }).then(res=>{
+        if(res.data.code === 200){
+          this.simiVideoList = res.data.data;
+        }
+      })
+    },
+    //跳转推荐视频界面
+    toVideoPage(id){
+      this.$router.push('/videoPlay/'+id);
+    },
+    // 监听Video播放的事件
+    videoPlay(){
+      this.$emit('videoPlay');
     },
     // 分页插件页数改变
     handleCurrentChange(newPage){
@@ -223,42 +248,23 @@ export default {
           block: 'start'
         })
       });
-      this.getMvCommentList();
-    },
-    // 监听mv播放的事件
-    videoPlay(){
-      this.$emit('videoPlay');
-    },
-    // 获取相关的mv
-    getSimiMvs(){
-      this.$http.get({
-        url: '/simi/mv',
-        params:{mvid: this.curMvId}
-      }).then(({data:res})=>{
-        if(res.code === 200){
-          this.simiMvList = res.mvs;
-        }
-      })
-    },
-    //跳转推荐mv界面
-    toMvPage(mvId){
-      this.$router.push('/toVideoPage/'+mvId);
+      this.getCommentList();
     }
   },
   watch:{
     $route(to){
       // 模拟路由参数改变后页面自动刷新
-      this.curMvId =to.params.id;
+      this.curVideoId =to.params.id;
       this.queryInfo.id = to.params.id;
       this.queryInfo.offset = 0;
-      //获取当前mv的详细数据
-      this.getMvDetailInfo();
-      // 获取当前mv的Url
-      this.getMvUrl();
-      // 获取当前mv的评论数据
-      this.getMvCommentList();
-      //获取相关mv
-      this.getSimiMvs();
+      // 获取当前详细数据
+      this.getVideoDetailInfo();
+      //获取当前的url
+      this.getVideoUrl();
+      //获取当前Video的评论数据
+      this.getCommentList();
+      //获取相关Video
+      this.getSimiVideos()
       // 滚动条回到顶部
       let main = window.document.getElementById('main');
       main.scrollTop = 0;
@@ -268,6 +274,6 @@ export default {
 }
 </script>
 
-<style scoped lang="less">
+<style scoped>
 
 </style>

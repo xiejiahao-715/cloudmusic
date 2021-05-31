@@ -1,5 +1,7 @@
 <template>
   <div style="margin-top: 25px;margin-bottom: 55px;">
+    <!--用于定位-->
+    <div id="singerMv"></div>
     <el-row v-for="(list,index) in showSingerMv()" :key="index">
       <el-col
           v-for="(item,index) in list" :key="index"
@@ -80,8 +82,9 @@ export default {
     handleCurrentChange(newPage) {
       this.queryInfo.offset = (newPage - 1) * this.queryInfo.limit;
       this.$nextTick(()=>{
-        let main = window.document.getElementById('main');
-        main.scrollTop = 0;
+        window.document.getElementById('singerMv').scrollIntoView({
+          block: 'start',
+        })
       });
       this.getCurrentSingerMv();
     },

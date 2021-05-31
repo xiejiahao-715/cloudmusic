@@ -93,6 +93,10 @@ export default {
     // 当换页时触发
     handleCurrentChange(newPage){
       this.queryInfo.offset = (newPage - 1) * this.queryInfo.limit;
+      this.$nextTick(()=>{
+        let main = window.document.getElementById('main');
+        main.scrollTop = 0;
+      });
       this.getGoodMusicList();
     },
     //点击标签筛选
