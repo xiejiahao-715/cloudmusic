@@ -114,7 +114,7 @@ export default {
       }).then(res=>{
         this.mvList = res.data.data;
         // 通过为dom节点添加属性来控制分页插件的 下一页 按钮是否可用
-        if(res.data.hasmore === true)
+        if(res.data.hasMore === true)
           window.document.getElementsByClassName('btn-next')[0].removeAttribute('disabled');
         else
           window.document.getElementsByClassName('btn-next')[0].setAttribute('disabled','disabled');

@@ -12,9 +12,9 @@ function get(config){
       ...config.params,
       timestamp: Date.parse(new Date())
     }
-    // if(window.localStorage.getItem('musicCookie') !== null){
-    //   config.params.cookie = encodeURIComponent(window.localStorage.getItem('musicCookie'));
-    // }
+    if(window.localStorage.getItem('musicCookie') !== null || window.localStorage.getItem('musicCookie') !== 'null'){
+      config.params.cookie = encodeURIComponent(window.localStorage.getItem('musicCookie'));
+    }
     return config;
   });
   return instance(config);

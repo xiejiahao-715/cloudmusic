@@ -35,11 +35,15 @@
             <el-menu-item index="/video">视频</el-menu-item>
           </el-menu-item-group>
           <el-menu-item-group>
-            <template #title>我的音乐</template>
+            <template #title>
+              <div>我的音乐</div>
+            </template>
             <el-menu-item index="/cloudMusic">我的音乐云盘</el-menu-item>
           </el-menu-item-group>
           <el-menu-item-group>
-            <template #title>创建的歌单</template>
+            <template #title>
+              <div>创建的歌单</div>
+            </template>
             <template #default>
               <el-menu-item
                   v-for="item in createdPlayList" :key="item.id" @click="toMyPlayList(item.id)"
@@ -47,7 +51,9 @@
             </template>
           </el-menu-item-group>
           <el-menu-item-group>
-            <template #title>收藏的歌单</template>
+            <template #title>
+              <div>收藏的歌单</div>
+            </template>
             <template #default>
               <el-menu-item
                   v-for="item in favoritePlayList" :key="item.id" @click="toMyPlayList(item.id)"
@@ -200,7 +206,8 @@ export default {
   data(){
     return {
       // 当前用户的信息
-      currentUserInfo: window.localStorage.getItem('currentUserInfo') === 'null' ? null: JSON.parse(window.localStorage.getItem('currentUserInfo')),
+      currentUserInfo: window.localStorage.getItem('currentUserInfo') === 'null' ||  window.localStorage.getItem('currentUserInfo') === null
+          ? null : JSON.parse(window.localStorage.getItem('currentUserInfo')),
       // 控制登陆对话框的显示与隐藏
       loginDialogVisible:false,
       // 二维码图片的base64编码
